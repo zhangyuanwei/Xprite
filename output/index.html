@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<style type="text/css">
+		#control{
+			right:10px;
+			bottom:10px;
+			position:fixed;
+			background:rgba(0,0,0,0.5);
+			color:#fff;
+			z-index:1;
+		}
+		.message {
+			margin:0
+		}
+		#canvas {
+			background:url(canvas_bg.gif);
+			position:relative;
+		}
+		.space, .image {
+			position : absolute;
+			border:rgba(0,0,0,0) solid;
+		}
+		.debug .space {
+			background: rgba(0, 255, 0, 0.1);
+			border: rgba(255, 0, 0, 0.1) solid;
+		}
+		.debug .space:hover{
+			background: rgba(0, 255, 0, 0.5);
+			border: rgba(255, 0, 0, 0.5) solid;
+		}
+		.debug .image {
+			border: rgba(0, 0, 255, 0.1) solid;
+		}
+		.debug .image:hover {
+			border: rgba(0, 0, 255, 0.5) solid;
+		}
+	</style>
+	<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+</head>
+<body>
+	<div id="control">
+		<div id="log"></div>
+		<button id="debug">调试</button>
+		<button id="clear">清空</button>
+		<input id="step" type="text" maxlength="5" size="5"/>
+		<button id="jump">转跳</button>
+		<button id="pre">上一步</button>
+		<button id="next">下一步</button>
+	</div>
+	<div id="canvas"></div>
+	<script type="text/javascript">
+		var id = 0,
+			$canvas = $("#canvas"),
+			$log = $("#log");
+		$("#debug").click(function(){
+			$canvas.toggleClass("debug");
+		});
+		$("#clear").click(function(){
+				$log.html("");
+		});
+		$("#next").click(function(){
+			id++;
+			loadData();
+		});
+		$("#pre").click(function(){
+			id--;
+			loadData();
+		});
+		$("#jump").click(function(){
+			id = parseInt($("#step").val());
+			loadData();
+		});
+		function loadData(){
+			if (id < 0) id = 0;
+			$.get(id + ".json?"+ +new Date, function(data){
+				var html=[];
+				data.images.forEach(function(img){
+					html.push('<img class="image"',
+						' src="', img[0], '"',
+						' style="',
+						'left:', img[1] - img[8], 'px;',
+						'top:', img[2] - img[5], 'px;',
+						'width:', img[3], 'px;',
+						'height:', img[4], 'px;',
+						'border-width:', img[5], 'px ', img[6] ,'px ', img[7], 'px ', img[8] ,'px',
+						'"/>');
+				});
+				data.spaces.forEach(function(spa){
+					html.push('<div class="space" style="',
+						'left:', spa[0] - spa[7], 'px;',
+						'top:', spa[1] - spa[4], 'px;',
+						'width:', spa[2], 'px;',
+						'height:', spa[3], 'px;',
+						'border-width:', spa[4], 'px ', spa[5] ,'px ', spa[6], 'px ', spa[7] ,'px',
+						'">',
+						//'(',spa[0],',',spa[1],',',spa[2],',',spa[3],')',
+						'</div>');
+				});
+				$canvas.html(html.join(""));
+				$log.append($('<p class="message"></p>').text(id + ":" + data.message));
+			}).fail(function(){
+				id--;
+				loadData();
+			});
+		}
+		loadData(id);
+	</script>
+</body>
+</html>
